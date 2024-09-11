@@ -222,16 +222,23 @@
             const textPositions = textParticles.attributes.position.array;
             const infinityPositions = infinityParticles.attributes.position.array;
 
+            // Slow down RUZGAR.IO particle movement
             for (let i = 0; i < textPositions.length; i += 3) {
-                textPositions[i] += Math.sin(Date.now() * 0.0001 + i) * 0.03;
-                textPositions[i + 1] += Math.cos(Date.now() * 0.0002 + i) * 0.03;
-                textPositions[i + 2] += Math.sin(Date.now() * 0.0003 + i) * 0.03;
+                textPositions[i] += Math.sin(Date.now() * 0.00050 + i) * 0.01;
+                textPositions[i + 1] += Math.cos(Date.now() * 0.00007 + i) * 0.01;
+                textPositions[i + 2] += Math.sin(Date.now() * 0.00009 + i) * 0.01;
             }
 
+            // Keep infinity particles in their original formation with slight movement
+            const time = Date.now() * 0.00005;
             for (let i = 0; i < infinityPositions.length; i += 3) {
-                infinityPositions[i] += Math.sin(Date.now() * 0.00005 + i) * 0.05;
-                infinityPositions[i + 1] += Math.cos(Date.now() * 0.00007 + i) * 0.05;
-                infinityPositions[i + 2] += Math.sin(Date.now() * 0.00009 + i) * 0.05;
+                const originalX = infinityPositions[i];
+                const originalY = infinityPositions[i + 1];
+                const originalZ = infinityPositions[i + 2];
+
+                infinityPositions[i] = originalX + Math.sin(time + i * 0.1) * 0.5;
+                infinityPositions[i + 1] = originalY + Math.cos(time + i * 0.1) * 0.5;
+                infinityPositions[i + 2] = originalZ + Math.sin(time + i * 0.2) * 0.5;
             }
 
             textParticles.attributes.position.needsUpdate = true;
