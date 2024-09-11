@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Ruzgar Zere - ruzgarzere.com">
+    <meta name="author" content="Ruzgar Zere">
+    <meta property="og:title" content="Ruzgar Zere - ruzgarzere.com">
+    <meta property="og:description" content="this is my website">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://ruzgarzere.com">
+    <link rel="icon" href="favicon.png" type="image/x-icon">
+    <title>Ruzgar Zere - Ruzgar.io</title>
+    <link href="https://fonts.googleapis.com/css2?family=Geist+Mono&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #000; }
+        canvas { display: block; }
+        #info-left {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            color: white;
+            font-family: 'Geist Mono', monospace;
+            font-size: 18px;
+        }
+        #info-right {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+        }
+        #info-right a {
+            color: white;
+            margin-left: 10px;
+            text-decoration: none;
+        }
+        #info-right svg {
+            width: 24px;
+            height: 24px;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+</head>
+<body>
+    <div id="info-left">Ruzgar Zere</div>
+    <div id="info-right">
+        <a href="https://github.com/rzere" target="_blank"><i data-lucide="github"></i></a>
+        <a href="https://twitter.com/ruzgarzere" target="_blank"><i data-lucide="twitter"></i></a>
+        <a href="https://www.linkedin.com/in/rzere/" target="_blank"><i data-lucide="linkedin"></i></a>
+        <a href="mailto:ruzgar@leadshark.io"><i data-lucide="mail"></i></a>
+    </div>
+    <script>
+        // Three.js scene setup
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Limit pixel ratio for better performance
+        document.body.appendChild(renderer.domElement);
+
+        // Particle system for RUZGAR.IO
+        const textParticleCount = 30000; // Reduced particle count
+        const textParticles = new THREE.BufferGeometry();
+        const textPositions = new Float32Array(textParticleCount * 3);
+        const textSizes = new Float32Array(textParticleCount);
+
+        // Create canvas for text
+        const textCanvas = document.createElement('canvas');
+        const textCtx = textCanvas.getContext('2d');
+        textCanvas.width = 1000;
+        textCanvas.height = 200;
+        textCtx.font = 'bold 120px Arial'; // Reduced font size
+        textCtx.fillStyle = 'white';
+        textCtx.textAlign = 'center';
+        textCtx.textBaseline = 'middle';
+        textCtx.fillText('RUZGAR.IO', textCanvas.width / 2, textCanvas.height / 2);
+
+        // Generate particles based on text
+        let particleIndex = 0;
+        const imageData = textCtx.getImageData(0, 0, textCanvas.width, textCanvas.height);
+        for (let y = 0; y < textCanvas.height; y += 1) {
+            for (let x = 0; x < textCanvas.width; x += 1) {
+                if (imageData.data[(y * textCanvas.width + x) * 4] > 128) {
+                    const px = (x - textCanvas.width / 2) / 3; // Increased spread
+                    const py = -(y - textCanvas.height / 2) / 3; // Increased spread and flipped y-axis
+                    const pz = (Math.random() - 0.5) * 20;
+                    textPositions[particleIndex * 3] = px;
+                    textPositions[particleIndex * 3 + 1] = py;
+                    textPositions[particleIndex * 3 + 2] = pz;
+                    textSizes[particleIndex] = Math.random() * 2 + 0.5;
+                    particleIndex++;
+                    if (particleIndex >= textParticleCount) break;
+                }
+            }
+            if (particleIndex >= textParticleCount) break;
+        }
+
+        textParticles.setAttribute('position', new THREE.BufferAttribute(textPositions, 3));
+        textParticles.setAttribute('size', new THREE.BufferAttribute(textSizes, 1));
+
+        // Create a circular texture for star-like particles
+        const canvas = document.createElement('canvas');
+        canvas.width = 32;
+        canvas.height = 32;
+        const ctx = canvas.getContext('2d');
+        const gradient = ctx.createRadialGradient(16, 16, 0, 16, 16, 16);
+        gradient.addColorStop(0, 'rgba(255,255,255,1)');
+        gradient.addColorStop(0.3, 'rgba(255,255,255,0.5)');
+        gradient.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, 32, 32);
+
+        const texture = new THREE.Texture(canvas);
+        texture.needsUpdate = true;
+
+        const textMaterial = new THREE.PointsMaterial({
+            color: 0xffffff,
+            size: 3,
+            sizeAttenuation: true,
+            map: texture,
+            alphaTest: 0.1,
+            transparent: true,
+            opacity: 1
+        });
+
+        const textParticleSystem = new THREE.Points(textParticles, textMaterial);
+        scene.add(textParticleSystem);
+
+        // Infinity (8-shape) particle system
+        const infinityParticleCount = 40000; // Reduced particle count
+        const infinityParticles = new THREE.BufferGeometry();
+        const infinityPositions = new Float32Array(infinityParticleCount * 3);
+        const infinitySizes = new Float32Array(infinityParticleCount);
+
+        for (let i = 0; i < infinityParticleCount; i++) {
+            const t = Math.random() * Math.PI * 2;
+            const u = Math.random() * Math.PI * 2;
+            const v = Math.random() * Math.PI * 2;
+            
+            // Base infinity shape
+            const x = 180 * Math.cos(t) / (1 + Math.sin(t) * Math.sin(t));
+            const z = 180 * Math.cos(t) * Math.sin(t) / (1 + Math.sin(t) * Math.sin(t));
+            
+            // Add thickness and volume
+            const thickness = 20; // Reduced thickness
+            const volumeX = thickness * Math.cos(u) * Math.sin(v);
+            const volumeY = thickness * Math.sin(u) * Math.sin(v);
+            const volumeZ = thickness * Math.cos(v);
+
+            infinityPositions[i * 3] = x + volumeX;
+            infinityPositions[i * 3 + 1] = volumeY;
+            infinityPositions[i * 3 + 2] = z + volumeZ;
+            infinitySizes[i] = Math.random() * 2 + 0.5; // Slightly smaller particles
+        }
+
+        infinityParticles.setAttribute('position', new THREE.BufferAttribute(infinityPositions, 3));
+        infinityParticles.setAttribute('size', new THREE.BufferAttribute(infinitySizes, 1));
+
+        const infinityMaterial = new THREE.PointsMaterial({
+            color: 0xaaaaaa, // Slightly darker color
+            size: 2.5, // Increased base size
+            sizeAttenuation: true,
+            map: texture,
+            alphaTest: 0.1,
+            transparent: true,
+            opacity: 0.7 // Slightly more transparent
+        });
+
+        const infinityParticleSystem = new THREE.Points(infinityParticles, infinityMaterial);
+        scene.add(infinityParticleSystem);
+
+        // Camera position
+        camera.position.z = 450; // Increased camera distance
+
+        // Mouse interaction for rotation
+        let isDragging = false;
+        let previousMousePosition = { x: 0, y: 0 };
+        let rotationSpeed = { x: 0, y: 0 };
+
+        document.addEventListener('mousedown', () => isDragging = true);
+        document.addEventListener('mouseup', () => isDragging = false);
+        document.addEventListener('mousemove', (event) => {
+            if (isDragging) {
+                const deltaMove = {
+                    x: event.clientX - previousMousePosition.x,
+                    y: event.clientY - previousMousePosition.y
+                };
+
+                rotationSpeed.x = deltaMove.y * 0.001;
+                rotationSpeed.y = deltaMove.x * 0.001;
+            }
+
+            previousMousePosition = {
+                x: event.clientX,
+                y: event.clientY
+            };
+        });
+
+        // Zoom functionality
+        document.addEventListener('wheel', (event) => {
+            event.preventDefault();
+            const zoomSpeed = 0.1;
+            camera.position.z += event.deltaY * zoomSpeed;
+            camera.position.z = Math.max(50, Math.min(300, camera.position.z));
+        });
+
+        // Animation
+        function animate() {
+            requestAnimationFrame(animate);
+
+            textParticleSystem.rotation.x += rotationSpeed.x;
+            textParticleSystem.rotation.y += rotationSpeed.y;
+            infinityParticleSystem.rotation.x += rotationSpeed.x;
+            infinityParticleSystem.rotation.y += rotationSpeed.y;
+
+            rotationSpeed.x *= 0.95;
+            rotationSpeed.y *= 0.95;
+
+            const textPositions = textParticles.attributes.position.array;
+            const infinityPositions = infinityParticles.attributes.position.array;
+
+            for (let i = 0; i < textPositions.length; i += 3) {
+                textPositions[i] += Math.sin(Date.now() * 0.0001 + i) * 0.03;
+                textPositions[i + 1] += Math.cos(Date.now() * 0.0002 + i) * 0.03;
+                textPositions[i + 2] += Math.sin(Date.now() * 0.0003 + i) * 0.03;
+            }
+
+            for (let i = 0; i < infinityPositions.length; i += 3) {
+                infinityPositions[i] += Math.sin(Date.now() * 0.00005 + i) * 0.05;
+                infinityPositions[i + 1] += Math.cos(Date.now() * 0.00007 + i) * 0.05;
+                infinityPositions[i + 2] += Math.sin(Date.now() * 0.00009 + i) * 0.05;
+            }
+
+            textParticles.attributes.position.needsUpdate = true;
+            infinityParticles.attributes.position.needsUpdate = true;
+
+            renderer.render(scene, camera);
+        }
+
+        animate();
+
+        // Responsive design
+        function updateSceneSize() {
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            camera.aspect = width / height;
+            camera.updateProjectionMatrix();
+            renderer.setSize(width, height);
+
+            // Adjust particle size based on screen size
+            const particleSize = Math.min(width, height) / 200;
+            textMaterial.size = particleSize;
+            infinityMaterial.size = particleSize * 0.8;
+
+            // Adjust camera position for mobile
+            if (width < 768) {
+                camera.position.z = 550;
+            } else {
+                camera.position.z = 450;
+            }
+        }
+
+        // Initial update and event listener
+        updateSceneSize();
+        window.addEventListener('resize', updateSceneSize);
+
+        // Touch interaction for mobile
+        let touchStartX, touchStartY;
+
+        document.addEventListener('touchstart', (event) => {
+            touchStartX = event.touches[0].clientX;
+            touchStartY = event.touches[0].clientY;
+        });
+
+        document.addEventListener('touchmove', (event) => {
+            if (!touchStartX || !touchStartY) return;
+
+            const touchEndX = event.touches[0].clientX;
+            const touchEndY = event.touches[0].clientY;
+
+            const deltaX = touchEndX - touchStartX;
+            const deltaY = touchEndY - touchStartY;
+
+            rotationSpeed.y = deltaX * 0.001;
+            rotationSpeed.x = -deltaY * 0.001;
+
+            touchStartX = touchEndX;
+            touchStartY = touchEndY;
+        });
+
+        document.addEventListener('touchend', () => {
+            touchStartX = null;
+            touchStartY = null;
+        });
+
+        // Initialize Lucide icons
+        lucide.createIcons();
+    </script>
+</body>
+</html>
